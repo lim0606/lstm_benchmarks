@@ -124,26 +124,42 @@ X_val, _ = make_batches(X_val, length)
 y_val, val_mask = make_batches(y_val, length)
 
 n_epochs = 500
-learning_rate = 10
+learning_rate = 1
 momentum = .9
 
 l_in = lasagne.layers.InputLayer(shape=(BATCH_SIZE, length, X_val.shape[-1]))
 l_noise = lasagne.layers.GaussianNoiseLayer(l_in, sigma=0.6)
 
-l_forward_1 = lasagne.layers.LSTMLayer(l_noise, num_units=156)
-l_backward_1 = lasagne.layers.LSTMLayer(l_noise, num_units=156)
-l_recurrent_1 = lasagne.layers.BidirectionalLayer(l_noise, l_forward_1,
-                                                  l_backward_1)
+#l_forward_1 = lasagne.layers.LSTMLayer(l_noise, num_units=156)
+#l_backward_1 = lasagne.layers.LSTMLayer(l_noise, num_units=156)
+#l_recurrent_1 = lasagne.layers.BidirectionalLayer(l_noise, l_forward_1,
+#                                                  l_backward_1)
+l_forward_1 = lasagne.layers.LSTMLayer(
+    l_noise, 156, backwards=False, learn_init=True, peepholes=True)
+l_backward_1 = lasagne.layers.LSTMLayer(
+    l_noise, 156, backwards=True, learn_init=True, peepholes=True)
+l_recurrent_1 = lasagne.layers.ElemwiseSumLayer([l_forward_1, l_backward_1])
 
-l_forward_2 = lasagne.layers.LSTMLayer(l_recurrent_1, num_units=300)
-l_backward_2 = lasagne.layers.LSTMLayer(l_recurrent_1, num_units=300)
-l_recurrent_2 = lasagne.layers.BidirectionalLayer(l_recurrent_1, l_forward_2,
-                                                  l_backward_2)
+#l_forward_2 = lasagne.layers.LSTMLayer(l_recurrent_1, num_units=300)
+#l_backward_2 = lasagne.layers.LSTMLayer(l_recurrent_1, num_units=300)
+#l_recurrent_2 = lasagne.layers.BidirectionalLayer(l_recurrent_1, l_forward_2,
+#                                                  l_backward_2)
+l_forward_2 = lasagne.layers.LSTMLayer(
+    l_recurrent_1, 300, backwards=False, learn_init=True, peepholes=True)
+l_backward_2 = lasagne.layers.LSTMLayer(
+    l_recurrent_1, 300, backwards=True, learn_init=True, peepholes=True)
+l_recurrent_2 = lasagne.layers.ElemwiseSumLayer([l_forward_2, l_backward_2])
 
-l_forward_3 = lasagne.layers.LSTMLayer(l_recurrent_2, num_units=102)
-l_backward_3 = lasagne.layers.LSTMLayer(l_recurrent_2, num_units=102)
-l_recurrent_3 = lasagne.layers.BidirectionalLayer(l_recurrent_2, l_forward_3,
-                                                  l_backward_3)
+#l_forward_3 = lasagne.layers.LSTMLayer(l_recurrent_2, num_units=102)
+#l_backward_3 = lasagne.layers.LSTMLayer(l_recurrent_2, num_units=102)
+#l_recurrent_3 = lasagne.layers.BidirectionalLayer(l_recurrent_2, l_forward_3,
+#                                                  l_backward_3)
+l_forward_3 = lasagne.layers.LSTMLayer(
+    l_recurrent_2, 102, backwards=False, learn_init=True, peepholes=True)
+l_backward_3 = lasagne.layers.LSTMLayer(
+    l_recurrent_2, 102, backwards=True, learn_init=True, peepholes=True)
+l_recurrent_3 = lasagne.layers.ElemwiseSumLayer([l_forward_3, l_backward_3])
+
 
 l_reshape = lasagne.layers.ReshapeLayer(l_recurrent_3,
                                        (BATCH_SIZE*length, 102))
